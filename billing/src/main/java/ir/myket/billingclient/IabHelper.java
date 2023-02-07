@@ -491,9 +491,9 @@ public class IabHelper {
         checkNotDisposed();
         checkSetupDone("consume");
 
-        if (!itemInfo.mItemType.equals(ITEM_TYPE_INAPP)) {
+        if (!itemInfo.getItemType().equals(ITEM_TYPE_INAPP)) {
             throw new IabException(IABHELPER_INVALID_CONSUMPTION,
-                    "Items of type '" + itemInfo.mItemType + "' can't be consumed.");
+                    "Items of type '" + itemInfo.getItemType() + "' can't be consumed.");
         }
 
         iabConnection.consume(mContext, itemInfo);
@@ -681,6 +681,102 @@ public class IabHelper {
         })).start();
     }
 
+    public void querySkuDetailsAsync(final List<String> skusItems,
+                                     final QuerySkuDetailsFinishedListener listener) {
+        final Handler handler = new Handler();
+        checkNotDisposed();
+        checkSetupDone("querySkuDetails");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                IabResult result = new IabResult(0, "SkuDetails refresh successful.");
+                final Inventory inv = new Inventory();
+                try {
+                    try {
+                        int r = querySkuDetails(ITEM_TYPE_INAPP, inv, skusItems);
+                        if (r != BILLING_RESPONSE_RESULT_OK) {
+                            throw new IabException(r,
+                                    "Error refreshing SkuDetails (querying prices of items).");
+                        }
+                        if (subscriptionsSupported()) {
+                            r = querySkuDetails(ITEM_TYPE_SUBS, inv, skusItems);
+                            if (r != BILLING_RESPONSE_RESULT_OK) {
+                                throw new IabException(r,
+                                        "Error refreshing SkuDetails (querying prices of subscriptions).");
+                            }
+                        }
+                    } catch (RemoteException e) {
+                        throw new IabException(IABHELPER_REMOTE_EXCEPTION,
+                                "Remote exception while refreshing SkuDetails.",
+                                (Exception) e);
+                    } catch (JSONException e2) {
+                        throw new IabException(IABHELPER_BAD_RESPONSE,
+                                "Error parsing JSON response while refreshing SkuDetails.", (Exception) e2);
+                    }
+                } catch (IabException ex) {
+                    result = ex.getResult();
+                }
+                final IabResult result_f = result;
+                final Inventory inv_f = inv;
+                if (!mDisposed && listener != null) {
+                    handler.post((Runnable) new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onQuerySkuDetailsFinished(result_f, inv_f);
+                        }
+                    });
+                }
+            }
+        }).start();
+    }
+
+    public void queryPurchasesAsync(final QueryPurchasesFinishedListener listener) {
+        final Handler handler = new Handler();
+        checkNotDisposed();
+        checkSetupDone("queryPurchases");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                IabResult result = new IabResult(BILLING_RESPONSE_RESULT_OK, "Purchases refresh successful.");
+                final Inventory inv = new Inventory();
+                try {
+                    try {
+                        int r = queryPurchases(inv, ITEM_TYPE_INAPP);
+                        if (r != BILLING_RESPONSE_RESULT_OK) {
+                            throw new IabException(r, "Error refreshing inventory (querying owned items).");
+                        }
+                        if (subscriptionsSupported()) {
+                            r = queryPurchases(inv, ITEM_TYPE_SUBS);
+                            if (r != BILLING_RESPONSE_RESULT_OK) {
+                                throw new IabException(r,
+                                        "Error refreshing inventory (querying owned subscriptions).");
+                            }
+                        }
+                    } catch (RemoteException e) {
+                        throw new IabException(IABHELPER_REMOTE_EXCEPTION,
+                                "Remote exception while refreshing Purchases.",
+                                (Exception) e);
+                    } catch (JSONException e2) {
+                        throw new IabException(IABHELPER_BAD_RESPONSE,
+                                "Error parsing JSON response while refreshing Purchases.", (Exception) e2);
+                    }
+                } catch (IabException ex) {
+                    result = ex.getResult();
+                }
+                final IabResult result_f = result;
+                final Inventory inv_f = inv;
+                if (!mDisposed && listener != null) {
+                    handler.post((Runnable) new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onQueryPurchasesFinished(result_f, inv_f);
+                        }
+                    });
+                }
+            }
+        }).start();
+    }
+
     /**
      * Callback for setup process. This listener's {@link #onIabSetupFinished} method is called
      * when the setup process is complete.
@@ -750,5 +846,13 @@ public class IabHelper {
          *                  sku.
          */
         public void onConsumeMultiFinished(List<Purchase> purchases, List<IabResult> results);
+    }
+
+    public interface QuerySkuDetailsFinishedListener {
+        void onQuerySkuDetailsFinished(final IabResult iabResult, final Inventory inventory);
+    }
+
+    public interface QueryPurchasesFinishedListener {
+        void onQueryPurchasesFinished(final IabResult iabResult, final Inventory inventory);
     }
 }
