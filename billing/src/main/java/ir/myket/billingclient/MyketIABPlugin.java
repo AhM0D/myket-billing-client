@@ -24,8 +24,6 @@ public class MyketIABPlugin extends MyketIABPluginBase
     private List<Purchase> mPurchases;
     private List<SkuDetails> mSkus;
 
-    private final IABLogger logger = new IABLogger();
-
     public MyketIABPlugin() {
         mPurchases = new ArrayList<Purchase>();
     }
@@ -42,14 +40,14 @@ public class MyketIABPlugin extends MyketIABPluginBase
     }
 
     public void enableLogging(final boolean shouldEnable) {
-        logger.mDebugLog = shouldEnable;
+        IABLogger.DEBUG = shouldEnable;
         if (mHelper != null) {
             mHelper.enableDebugLogging(true);
         }
     }
 
     public void init(final String publicKey) {
-        logger.logDebug(getClass().getSimpleName() + "init = " + publicKey);
+        IABLogger.logEntering(getClass().getSimpleName(), "init = ", publicKey);
         mPurchases = new ArrayList<Purchase>();
         (mHelper = new IabHelper((Context) getActivity(), publicKey))
                 .startSetup(new IabHelper.OnIabSetupFinishedListener() {
@@ -67,7 +65,7 @@ public class MyketIABPlugin extends MyketIABPluginBase
     }
 
     public void unbindService() {
-        logger.logDebug(getClass().getSimpleName() + "unbindService ");
+        IABLogger.logEntering(getClass().getSimpleName(), "unbindService");
         if (mHelper != null) {
             mHelper.dispose();
             mHelper = null;
@@ -75,12 +73,12 @@ public class MyketIABPlugin extends MyketIABPluginBase
     }
 
     public boolean areSubscriptionsSupported() {
-        logger.logDebug(getClass().getSimpleName() + " areSubscriptionsSupported");
+        IABLogger.logEntering(getClass().getSimpleName(), "areSubscriptionsSupported");
         return mHelper != null && mHelper.subscriptionsSupported();
     }
 
     public void queryInventory(final String[] skus) {
-        logger.logDebug(getClass().getSimpleName() + "queryInventory " + Arrays.toString(skus));
+        IABLogger.logEntering(getClass().getSimpleName(), "queryInventory", skus);
         if (mHelper == null) {
             Log.i(TAG, MyketIABPlugin.BILLING_NOT_RUNNING_ERROR);
             return;
@@ -105,7 +103,7 @@ public class MyketIABPlugin extends MyketIABPluginBase
     }
 
     public void querySkuDetails(final String[] skus) {
-        logger.logDebug(getClass().getSimpleName() + "querySkuDetails " + Arrays.toString(skus));
+        IABLogger.logEntering(getClass().getSimpleName(), "querySkuDetails", skus);
         if (mHelper == null) {
             Log.i(TAG, MyketIABPlugin.BILLING_NOT_RUNNING_ERROR);
             return;
@@ -130,7 +128,7 @@ public class MyketIABPlugin extends MyketIABPluginBase
     }
 
     public void queryPurchases() {
-        logger.logDebug(getClass().getSimpleName() + "queryPurchases ");
+        IABLogger.logEntering(getClass().getSimpleName(), "queryPurchases");
         if (mHelper == null) {
             Log.i(TAG, MyketIABPlugin.BILLING_NOT_RUNNING_ERROR);
             return;
@@ -155,7 +153,7 @@ public class MyketIABPlugin extends MyketIABPluginBase
     }
 
     public void purchaseProduct(final String sku, final String developerPayload) {
-        logger.logDebug(getClass().getSimpleName() + "purchaseProduct " + Arrays.toString(new Object[]{sku, developerPayload}));
+        IABLogger.logEntering(getClass().getSimpleName(), "purchaseProduct", new Object[]{sku, developerPayload});
         if (mHelper == null) {
             Log.i(TAG, MyketIABPlugin.BILLING_NOT_RUNNING_ERROR);
             return;
@@ -190,7 +188,7 @@ public class MyketIABPlugin extends MyketIABPluginBase
     }
 
     public void consumeProduct(final String sku) {
-        logger.logDebug(getClass().getSimpleName() + "consumeProduct " + sku);
+        IABLogger.logEntering(getClass().getSimpleName(), "consumeProduct", sku);
         if (mHelper == null) {
             Log.i(TAG, MyketIABPlugin.BILLING_NOT_RUNNING_ERROR);
             return;
@@ -235,7 +233,7 @@ public class MyketIABPlugin extends MyketIABPluginBase
     }
 
     public void consumeProducts(final String[] skus) {
-        logger.logDebug(getClass().getSimpleName() + "consumeProducts " + Arrays.toString(skus));
+        IABLogger.logEntering(getClass().getSimpleName(), "consumeProducts", skus);
         if (mHelper == null) {
             Log.i(TAG, MyketIABPlugin.BILLING_NOT_RUNNING_ERROR);
             return;

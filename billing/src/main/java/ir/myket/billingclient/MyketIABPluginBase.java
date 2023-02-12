@@ -20,8 +20,6 @@ public class MyketIABPluginBase {
     private Field mUnityPlayerActivityField;
     private Method mUnitySendMessageMethod;
 
-    private IABLogger iabLogger = new IABLogger();
-
     public MyketIABPluginBase() {
         try {
             mUnityPlayerClass = Class.forName("com.unity3d.player.UnityPlayer");
@@ -95,7 +93,7 @@ public class MyketIABPluginBase {
     }
 
     protected void persist(final String key, final String value) {
-        iabLogger.logDebug(getClass().getSimpleName() + " persist " + Arrays.toString(new Object[]{key, value}));
+        IABLogger.logEntering(getClass().getSimpleName(), "persist", new Object[]{key, value});
         try {
             final SharedPreferences prefs =
                     getActivity().getSharedPreferences("MyketIABPluginPreferences", 0);
@@ -106,7 +104,7 @@ public class MyketIABPluginBase {
     }
 
     protected String unPersist(final String key, final boolean deleteKeyAfterFetching) {
-        iabLogger.logDebug(getClass().getSimpleName() + " unpersist " + Arrays.toString(new Object[]{key, true}));
+        IABLogger.logEntering(getClass().getSimpleName(), "unpersist", new Object[]{key, true});
         String val = "";
         try {
             final SharedPreferences prefs =
